@@ -1,0 +1,15 @@
+services:
+  - type: web
+    name: maya-flask-app
+    runtime: python
+    region: oregon
+    buildCommand: "pip install -r requirements.txt"
+    startCommand: "python app.py"
+    envVars:
+      - key: GEMINI_KEY
+        sync: AIzaSyBbZ7tuuDOCs8kM9IQABNjrG1xe7_6z9Qc
+      - key: AZURE_SPEECH_KEY
+        sync: 7jaBQBqGxTvKFoiMLJVqj3EBvgHdIuMa3EHN7OOd1fmkG9TShEPZJQQJ99BEACYeBjFXJ3w3AAAYACOGUxgG
+      - key: AZURE_SPEECH_REGION
+        sync: eastus
+    plan: free
