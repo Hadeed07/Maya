@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Maya</title>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@24,400,0,0" />
+    <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.5.0/css/all.css" integrity="sha384-B4dIYHKNBt8Bc12p+WXckhzcICo0wtJAoU8YZTY5qE0Id1GSseTk6S+L3BlXeVIU" crossorigin="anonymous">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link rel="icon" href="{{ url_for('static', filename='images/logo.png') }}" type="image/png">
+</head>
+<body>
+    
+    <div class="chat-container">
+        <div class="chat-header">
+            <img src="{{ url_for('static', filename='images/logo.png') }}" alt="Logo">
+            <h1>Maya</h1>
+        </div>
+
+        
+        <form action="{{ url_for('index') }}" method="post" id="chat-form">
+            <select class="chat-select" name="chat-select" aria-label=".form-select-sm example">
+                <option value="1" {% if selected_value == '1' %}selected{% endif %}>Friendly AI</option>
+                <option value="2" {% if selected_value == '2' %}selected{% endif %}>Physics Tutor</option>
+            </select>
+            
+            <div class="chat-messages" id="chat-messages">
+                {% if not chat_history %}
+                <div class="message maya-greeting">
+                    Hi there!
+                    <img src="{{ url_for('static', filename='images/chick.png') }}" alt="chick">
+                    I'm Maya. What's on your mind today?
+                    <button class="audio-btn" data-text="Hi there! I'm Maya. What's on your mind today?">
+                        <i class="fas fa-volume-up"></i>
+                    </button>
+                </div>
+                {% endif %}
+            
+                {% for msg in chat_history %}
+                <div class="message user-message">
+                    {{ msg.user_message }}
+                </div>
+            
+                <div class="message maya-message">
+                    <div class="message-content">
+                        {{ msg.maya_response | markdown}}
+                    </div>
+                    <button class="audio-btn" data-text="{{ msg.maya_response }}">
+                        <i class="fas fa-volume-up"></i>
+                    </button>
+                    <div class="audio-status"></div>
+                </div>
+                {% endfor %}
+            </div>
+            <div class="input-area">
+                <textarea type="text" rows="1" id="message-input" name="message" placeholder="Type your message..." required></textarea>
+                <button class="icon material-symbols-rounded" type="submit">Send</button>   
+            </div>
+        </form>
+           
+    </div>
+
+    <audio id="audio-player" style="display: none;"></audio>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const chatMessages = document.getElementById('chat-messages');
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+            
+            // Initialize audio buttons
+            setupAudioButtons();
+        });
+
+        const textarea = document.getElementById('message-input');
+
+        function adjustHeight() {
+            textarea.style.height = 'auto'; // Reset height
+            const newHeight = Math.min(textarea.scrollHeight, 150);
+            textarea.style.height = newHeight + 'px';
+            textarea.style.overflowY = textarea.scrollHeight > 150 ? 'auto' : 'hidden';
+        }
+
+        // Initial height setup
+        window.addEventListener('DOMContentLoaded', adjustHeight);
+        textarea.addEventListener('input', adjustHeight);
+        
+
+        function setupAudioButtons() {
+            const audioButtons = document.querySelectorAll('.audio-btn');
+            const audioPlayer = document.getElementById('audio-player');
+            
+            audioButtons.forEach(button => {
+                button.addEventListener('click', function() {
+                    // Get the text to be spoken
+                    const textToSpeak = this.getAttribute('chat-messages') || this.getAttribute('data-text');
+                    const statusDiv = this.nextElementSibling;
+                    
+                    // Visual feedback - show loading state
+                    this.classList.add('loading');
+                    this.disabled = true;
+                    if (statusDiv && statusDiv.classList.contains('audio-status')) {
+                        statusDiv.textContent = 'Generating audio...';
+                    }
+                    
+                    // Reset other buttons if they're playing
+                    audioButtons.forEach(btn => {
+                        if (btn !== this && btn.classList.contains('playing')) {
+                            btn.classList.remove('playing');
+                            btn.innerHTML = '<i class="fas fa-volume-up"></i>';
+                        }
+                    });
+                    
+                    // Make API request to generate speech
+                    fetch('/speak', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({ text: textToSpeak })
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        // Remove loading state
+                        this.classList.remove('loading');
+                        this.disabled = false;
+                        
+                        if (data.error) {
+                            if (statusDiv && statusDiv.classList.contains('audio-status')) {
+                                statusDiv.textContent = 'Error generating audio';
+                                setTimeout(() => { statusDiv.textContent = ''; }, 3000);
+                            }
+                            console.error('Error:', data.error);
+                            return;
+                        }
+                        
+                        // Create audio source from base64 data
+                        const audioSource = `data:${data.format};base64,${data.audioData}`;
+                        audioPlayer.src = audioSource;
+                        
+                        // Play the audio
+                        audioPlayer.play();
+                        
+                        // Update button to playing state
+                        this.classList.add('playing');
+                        this.innerHTML = '<i class="fas fa-stop"></i>';
+                        
+                        if (statusDiv && statusDiv.classList.contains('audio-status')) {
+                            statusDiv.textContent = 'Playing...';
+                        }
+                        
+                        // Listen for when audio finishes playing
+                        audioPlayer.onended = () => {
+                            this.classList.remove('playing');
+                            this.innerHTML = '<i class="fas fa-volume-up"></i>';
+                            if (statusDiv && statusDiv.classList.contains('audio-status')) {
+                                statusDiv.textContent = '';
+                            }
+                        };
+                        
+                        // Add click handler to stop audio
+                        this.onclick = function(e) {
+                            if (this.classList.contains('playing')) {
+                                audioPlayer.pause();
+                                audioPlayer.currentTime = 0;
+                                this.classList.remove('playing');
+                                this.innerHTML = '<i class="fas fa-volume-up"></i>';
+                                if (statusDiv && statusDiv.classList.contains('audio-status')) {
+                                    statusDiv.textContent = '';
+                                }
+                                // Reset onclick handler
+                                this.onclick = null;
+                                setupAudioButtons();
+                                e.stopPropagation();
+                            }
+                        };
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                        this.classList.remove('loading');
+                        this.disabled = false;
+                        if (statusDiv && statusDiv.classList.contains('audio-status')) {
+                            statusDiv.textContent = 'Error generating audio';
+                            setTimeout(() => { statusDiv.textContent = ''; }, 3000);
+                        }
+                    });
+                });
+            });
+        }
+    </script>
+
+</body>
+</html>
