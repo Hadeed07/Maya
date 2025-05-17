@@ -1,5 +1,8 @@
 body {
+    /* Use more explicit color format and add color-profile */
     background: linear-gradient(135deg, #011e2b, #023546, #036b97);
+    color-profile: sRGB;
+    -webkit-color-profile: sRGB;
     font-family: Arial, sans-serif;
     margin: 0;
     padding: 0;
@@ -8,7 +11,8 @@ body {
 }
 
 .chat-container {
-    background: linear-gradient(135deg, #1d1c1c, #2d455e);
+    /* Make gradient more explicit */
+    background: linear-gradient(135deg, rgba(29,28,28,1), rgba(45,69,94,1));
     border-radius: 8px;
     box-shadow: 0 0 20px rgba(0, 0, 0, 0.7);
     display: flex;
@@ -19,8 +23,9 @@ body {
 }
 
 .chat-header {
-    background: linear-gradient(90deg, #142330, #3a5c80);
-    color: white;
+    /* Use rgba for more consistent colors */
+    background: linear-gradient(90deg, rgba(20,35,48,1), rgba(58,92,128,1));
+    color: #ffffff;
     padding: 10px 15px;
     border-top-left-radius: 8px;
     border-top-right-radius: 8px;
@@ -42,8 +47,10 @@ body {
     font-size: 38px;
     font-weight: bold;
     color: #fff;
-    background-image: linear-gradient(135deg, #4dd0fc, #0a3dd8, #010149);
+    /* Use rgba for more consistent gradient text */
+    background-image: linear-gradient(135deg, rgba(77,208,252,1), rgba(10,61,216,1), rgba(1,1,73,1));
     background-clip: text;
+    -webkit-background-clip: text; /* Add missing prefix */
     -webkit-text-fill-color: transparent;
     flex-grow: 1;
 }
@@ -54,7 +61,7 @@ body {
     font-size: 18px;
     border: none;
     border-radius: 20px;
-    background: linear-gradient(170deg, #3a7bd5, #00d2ff);
+    background: linear-gradient(170deg, rgba(58,123,213,1), rgba(0,210,255,1));
     color: white;
     appearance: none;
     cursor: pointer;
@@ -71,7 +78,7 @@ body {
 }
 
 .chat-select:hover {
-    background: linear-gradient(135deg, #00d2ff, #3a7bd5);
+    background: linear-gradient(135deg, rgba(0,210,255,1), rgba(58,123,213,1));
 }
 
 .maya-greeting {
@@ -106,7 +113,8 @@ body {
 }
 
 .user-message {
-    background: linear-gradient(135deg, #48c6ef, #5ed2f0);
+    /* Use rgba for more consistent colors */
+    background: linear-gradient(135deg, rgba(72,198,239,1), rgba(94,210,240,1));
     margin-left: auto;
     font-size: 18px;
     border-bottom-right-radius: 4px;
@@ -115,7 +123,8 @@ body {
 }
 
 .maya-message {
-    background: linear-gradient(135deg, #a78bfa, #7f6aff);
+    /* Use rgba for more consistent colors */
+    background: linear-gradient(135deg, rgba(167,139,250,1), rgba(127,106,255,1));
     margin-right: auto;
     font-size: 18px;
     border-bottom-left-radius: 4px;
@@ -235,7 +244,8 @@ form {
 }
 
 button {
-    background: linear-gradient(90deg, #00c6ff, #0072ff);
+    /* Use rgba for more consistent colors */
+    background: linear-gradient(90deg, rgba(0,198,255,1), rgba(0,114,255,1));
     color: white;
     border: none;
     padding: 8px 15px;
@@ -250,7 +260,7 @@ button {
 }
 
 button:hover {
-    background: linear-gradient(90deg, #0072ff, #00c6ff);
+    background: linear-gradient(90deg, rgba(0,114,255,1), rgba(0,198,255,1));
 }
 
 /* Special style for the greeting audio button */
