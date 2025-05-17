@@ -70,7 +70,7 @@ class Maya:
         return response.text
     
 
-app = Flask(__name__, template_folder='Templates')
+app = Flask(__name__, template_folder='Templates', static_folder='Static')
 
 basedir = os.path.abspath(os.path.dirname(__file__))
 app.config['SQLALCHEMY_DATABASE_URI'] = f"sqlite:///{os.path.join(basedir, 'instance', 'database.db')}"
