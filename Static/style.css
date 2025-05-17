@@ -266,7 +266,8 @@ button:hover {
 @media screen and (max-width: 768px) {
     .chat-container {
         width: 90%;
-        height: 90vh;
+        height: 85vh;
+        margin: 3vh auto;
     }
 
     .chat-header h1 {
