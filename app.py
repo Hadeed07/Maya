@@ -10,6 +10,59 @@ from langchain_huggingface import HuggingFaceEmbeddings as Embeddings
 from langchain_chroma import Chroma
 from langchain.vectorstores.base import VectorStoreRetriever
 import azure.cognitiveservices.speech as speechsdk
+import json
+
+
+class Physics_Inspector:
+    def __init__(self, model="gemini-1.5-flash", temperature=0.7):
+        load_dotenv()
+        self.key = os.getenv("GEMINI_KEY")
+        genai.configure(api_key=self.key)
+        self.model = model
+        self.temperature = temperature
+
+        file_path = os.path.join(os.path.dirname(__file__), 'Data', 'physics_inspector.txt')
+        with open(file_path, 'r') as f:
+            self.physics_inspector = f.read()
+
+        self.context = [
+            {"role": "user", "parts": [{"text": self.physics_inspector}]},]
+        
+    def phy_inspector(self, prompt):
+        self.context.append({'role': 'user', 'parts': [{'text': prompt}]})
+        
+        model = genai.GenerativeModel(self.model)
+        response = model.generate_content(
+            self.context, generation_config = {'temperature': self.temperature})
+
+        self.context.append({'role': 'model', 'parts': [{'text': response.text}]})
+        return response.text
+
+
+class Inspector_LLM:
+    def __init__(self, model="gemini-1.5-flash", temperature=0.7):
+        load_dotenv()
+        self.key = os.getenv("GEMINI_KEY")
+        genai.configure(api_key=self.key)
+        self.model = model
+        self.temperature = temperature
+
+        file_path = os.path.join(os.path.dirname(__file__), 'Data', 'llm_inspector.txt')
+        with open(file_path, 'r') as f:
+            self.prompt_inspector = f.read()
+
+        self.context = [
+            {"role": "user", "parts": [{"text": self.prompt_inspector}]},]
+        
+    def llm_inspector(self, prompt):
+        self.context.append({'role': 'user', 'parts': [{'text': prompt}]})
+        
+        model = genai.GenerativeModel(self.model)
+        response = model.generate_content(
+            self.context, generation_config = {'temperature': self.temperature})
+
+        self.context.append({'role': 'model', 'parts': [{'text': response.text}]})
+        return response.text
 
 
 class Maya:
@@ -22,18 +75,16 @@ class Maya:
         self.temperature = temperature
 
         self.context = [
-            {"role": "user", "parts": [{"text": maya}]},
-            {"role": "model", "parts": [{"text": "Hi there! I'm Maya. What's on your mind today?"}]}
+            {"role": "user", "parts": [{"text": maya}]}
         ]
 
         self.context.extend(existing_content)
-        
 
     def _initialize_retriever(self):
         embeddings = Embeddings(model_name="all-MiniLM-L6-v2")
         
         # Load existing Chroma DB
-        physics_db = Chroma(persist_directory="Data/halliday_physics_db", embedding_function=embeddings)
+        physics_db = Chroma(persist_directory="Data/physics_db", embedding_function=embeddings)
         
         retriever = VectorStoreRetriever(
             vectorstore=physics_db,
@@ -126,8 +177,29 @@ def send_message():
     maya = Maya(maya_instructions, existing_content=context)
 
     if user_message:
+
+        # Check for prompt injection attacks
+        inspector = Inspector_LLM()
+        response = inspector.llm_inspector(user_message)
+
+        if response.startswith('{'):
+            result = json.loads(response)
+            if result.get('verdict') == 'BLOCKED':
+                flash(f"Security alert: {result.get('reason')}")
+                return redirect(url_for('index'))
+
         try:
-            maya_response = maya.get_completion(user_message)
+            if selected_value == '2':       # Physics Tutor
+
+                # Check if the user message is related to physics
+                physics_insp = Physics_Inspector()
+                response = physics_insp.phy_inspector(user_message)
+                if "IRRELEVANT" in response:
+                    maya_response = "This doesn't seem related to physics. Could you ask a physics question?"
+                else:   # Friendly Bot
+                    maya_response = maya.get_completion(user_message)
+            else:
+                maya_response = maya.get_completion(user_message)
 
             new_message = ChatHistory(user_message=user_message, maya_response=maya_response)
             db.session.add(new_message)
@@ -193,6 +265,21 @@ def speak():
         return jsonify({"error": str(e)}), 500
 
 
+@app.route("/delete_chat_history")
+def delete_chat_history():
+    try:
+        # Delete all chat history from the database
+        ChatHistory.query.delete()
+        db.session.commit()
+        flash("Chat history has been deleted successfully!", "success")
+    except Exception as e:
+        print(f"Error deleting chat history: {e}")
+        flash("There was an error deleting the chat history.", "error")
+    
+    # Redirect back to the index page
+    return redirect(url_for('index'))
+
+
 @app.template_filter('markdown')
 def markdown_filter(text):
     return Markup(markdown.markdown(text))
@@ -205,4 +292,4 @@ if __name__ == "__main__":
         ChatHistory.query.delete()  # Clear the database for fresh start
         db.session.commit()
 
-    app.run(host = "0.0.0.0", debug = True)
+    app.run(debug = True)
