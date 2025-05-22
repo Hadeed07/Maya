@@ -15,6 +15,7 @@ body {
     flex-direction: column;
     height: 80vh;
     margin: 60px auto;
+    position: relative;
     max-width: 700px;
 }
 
@@ -261,6 +262,105 @@ button:hover {
     top: auto;
     right: auto;
     vertical-align: middle;
+}
+
+
+.controls-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 15px;
+    margin: 10px 0;
+    position: relative;
+}
+
+/*  Delete Button */
+.delete-btn {
+    position: absolute;
+    top: 125px;
+    right: 15px;
+    background: linear-gradient(90deg, #ff5e62, #ff2d55);
+    color: white;
+    border: none;
+    padding: 0;
+    border-radius: 20px;
+    width: 35px;
+    height: 35px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
+    z-index: 10;
+}
+
+.delete-btn:hover {
+    background: linear-gradient(90deg, #ff2d55, #ff5e62);
+    transform: scale(1.05);
+}
+
+.delete-btn i {
+    font-size: 18px;
+}
+
+.flash-messages {
+    position: fixed;
+    top: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 1000;
+    width: 80%;
+    max-width: 500px;
+}
+
+.flash-message {
+    padding: 12px 20px;
+    margin-bottom: 15px;
+    border-radius: 8px;
+    color: white;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    animation: slideIn 0.3s ease-out forwards;
+}
+
+.flash-message.success {
+    background-color: #4caf50;
+}
+
+.flash-message.error {
+    background-color: #f44336;
+}
+
+.flash-message .close-btn {
+    background: transparent;
+    border: none;
+    color: white;
+    font-size: 16px;
+    cursor: pointer;
+    margin-left: 10px;
+    padding: 0;
+    opacity: 0.8;
+    height: auto;
+    width: auto;
+    transform: none;
+}
+
+.flash-message .close-btn:hover {
+    opacity: 1;
+}
+
+@keyframes slideIn {
+    from {
+        transform: translateY(-20px);
+        opacity: 0;
+    }
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
 }
 
 @media screen and (max-width: 768px) {
