@@ -19,10 +19,18 @@
 
         
         <form action="{{ url_for('index') }}" method="post" id="chat-form">
-            <select class="chat-select" name="chat-select" aria-label=".form-select-sm example">
-                <option value="1" {% if selected_value == '1' %}selected{% endif %}>Friendly AI</option>
-                <option value="2" {% if selected_value == '2' %}selected{% endif %}>Physics Tutor</option>
-            </select>
+            <div class="controls-container">
+                <select class="chat-select" name="chat-select" aria-label=".form-select-sm example">
+                    <option value="1" {% if selected_value == '1' %}selected{% endif %}>Friendly AI</option>
+                    <option value="2" {% if selected_value == '2' %}selected{% endif %}>Physics Tutor</option>
+                </select>
+            </div>
+            
+            {% if chat_history %}
+            <button type="button" id="delete-btn" class="delete-btn" title="Delete Chat History">
+                <i class="fas fa-trash-alt"></i>
+            </button>
+            {% endif %}
             
             <div class="chat-messages" id="chat-messages">
                 {% if not chat_history %}
@@ -62,6 +70,19 @@
 
     <audio id="audio-player" style="display: none;"></audio>
 
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            <div class="flash-messages">
+                {% for category, message in messages %}
+                    <div class="flash-message {{ category }}">
+                        {{ message }}
+                        <button class="close-btn"><i class="fas fa-times"></i></button>
+                    </div>
+                {% endfor %}
+            </div>
+        {% endif %}
+    {% endwith %}
+
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             const chatMessages = document.getElementById('chat-messages');
@@ -69,6 +90,16 @@
             
             // Initialize audio buttons
             setupAudioButtons();
+            
+            // Setup delete button
+            const deleteBtn = document.getElementById('delete-btn');
+            if (deleteBtn) {
+                deleteBtn.addEventListener('click', function() {
+                    if (confirm('Are you sure you want to delete all chat history?')) {
+                        window.location.href = "{{ url_for('delete_chat_history') }}";
+                    }
+                });
+            }
         });
 
         const textarea = document.getElementById('message-input');
@@ -186,6 +217,30 @@
                 });
             });
         }
+
+        document.addEventListener('DOMContentLoaded', function() {
+        const closeButtons = document.querySelectorAll('.flash-message .close-btn');
+        closeButtons.forEach(button => {
+            button.addEventListener('click', function() {
+                const flashMessage = this.parentElement;
+                flashMessage.style.opacity = '0';
+                setTimeout(() => {
+                    flashMessage.remove();
+                }, 300);
+            });
+        });
+        
+        // Auto-dismiss flash messages after 5 seconds
+        setTimeout(() => {
+            const flashMessages = document.querySelectorAll('.flash-message');
+            flashMessages.forEach(message => {
+                message.style.opacity = '0';
+                    setTimeout(() => {
+                        message.remove();
+                    }, 300);
+                });
+            }, 5000);
+        });
     </script>
 
 </body>
